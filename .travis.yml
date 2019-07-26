@@ -25,8 +25,18 @@ before_install:
   - eval "${MATRIX_EVAL}"
 
 before_script:
+  - mkdir -p .deps/.install
+  - cd .deps
+  - git clone https://github.com/harpoon-emu/harpoon
+  - cd harpoon
   - mkdir build
   - cd build
-  - cmake ..
+  - cmake -DCMAKE_INSTALL_PREFIX=../../.install ..
+  - make
+  - make install
+  - cd ../../..
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_INSTALL_PREFIX=../.deps/.install -DHarpoon_DIR=../.deps/.install/share/Harpoon/cmake ..
 
 script: make
