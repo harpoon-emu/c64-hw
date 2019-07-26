@@ -24,22 +24,9 @@ matrix:
 before_install:
   - eval "${MATRIX_EVAL}"
 
-install:
-  - sudo apt-get install -qq qt5-default libboost-all-dev
-
 before_script:
   - mkdir build
   - cd build
   - cmake ..
 
 script: make
-
-addons:
-  coverity_scan:
-    project:
-      name: "michalwy/harpoon"
-      description: "Build submitted via Travis CI"
-    notification_email: michalwy@gmail.com
-    build_command_prepend: ""
-    build_command: "make"
-    branch_pattern: coverity_scan

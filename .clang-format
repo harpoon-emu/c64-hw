@@ -33,9 +33,9 @@ DerivePointerBinding: false
 FixNamespaceComments: true
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '^"harpoon/harpoon.hh"$'
+  - Regex:           '^"harpoon/c64-hw/'
     Priority:        3
-  - Regex:           '^"harpoon/'
+  - Regex:           '^<harpoon/'
     Priority:        4
   - Regex:           '^".*"$'
     Priority:        2
