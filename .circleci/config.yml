@@ -5,30 +5,55 @@ commands:
       - checkout
       - run:
           name: Generate cmake
-          command: mkdir build && cd build && cmake ..
+          working_directory: build
+          command: cmake -DHarpoon_DIR=~/.deps/.install/share/Harpoon/cmake ..
       - run:
           name: Build
-          command: cd build && make
+          working_directory: build
+          command: make
+  deps:
+    steps:
+      - run:
+          name: "Harpoon: clone"
+          working_directory: ~/.deps
+          command: git clone https://github.com/harpoon-emu/harpoon
+      - run:
+          name: "Harpoon: cmake"
+          working_directory: ~/.deps/harpoon/build
+          command: cmake ..
+      - run:
+          name: "Harpoon: build"
+          working_directory: ~/.deps/harpoon/build
+          command: make
+      - run:
+          name: "Harpoon: install"
+          working_directory: ~/.deps/harpoon/build
+          command: make install
+
 jobs:
   build-gcc-fedora-31:
     docker:
       - image: harpoonemu/ci-build:gcc-fedora-31-fd8961b
     steps:
+      - deps
       - build
   build-gcc-fedora-32:
     docker:
       - image: harpoonemu/ci-build:gcc-fedora-32-fd8961b
     steps:
+      - deps
       - build
   build-clang-fedora-31:
     docker:
       - image: harpoonemu/ci-build:clang-fedora-31-fd8961b
     steps:
+      - deps
       - build
   build-clang-fedora-32:
     docker:
       - image: harpoonemu/ci-build:clang-fedora-32-fd8961b
     steps:
+      - deps
       - build
 
 workflows:
