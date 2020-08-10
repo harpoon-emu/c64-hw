@@ -20,10 +20,9 @@ public:
 	virtual void serialize(harpoon::memory::serializer::serializer &serializer) override;
 	virtual void deserialize(harpoon::memory::deserializer::deserializer &deserializer) override;
 
-	void add_read_memory(const harpoon::memory::memory_weak_ptr &memory);
-	void add_write_memory(const harpoon::memory::memory_weak_ptr &memory);
-	virtual void add_memory(const harpoon::memory::memory_weak_ptr &memory,
-	                        bool owner = true) override;
+	void add_read_memory(const harpoon::memory::memory_ptr &memory);
+	void add_write_memory(const harpoon::memory::memory_ptr &memory);
+	virtual void add_memory(const harpoon::memory::memory_ptr &memory, bool owner = true) override;
 
 	virtual void get_cell(harpoon::memory::address address, std::uint8_t &value) override;
 	virtual void set_cell(harpoon::memory::address address, std::uint8_t value) override;
@@ -35,22 +34,22 @@ public:
 private:
 	void create_d000_dfff_area();
 
-	harpoon::memory::main_memory_weak_ptr _read_memory{};
-	harpoon::memory::main_memory_weak_ptr _write_memory{};
+	harpoon::memory::main_memory_ptr _read_memory{};
+	harpoon::memory::main_memory_ptr _write_memory{};
 
-	harpoon::memory::memory_weak_ptr _basic_a000_bfff{};
-	harpoon::memory::memory_weak_ptr _kernal_e000_ffff{};
+	harpoon::memory::memory_ptr _basic_a000_bfff{};
+	harpoon::memory::memory_ptr _kernal_e000_ffff{};
 
-	harpoon::memory::memory_weak_ptr _zero_page_0000_00ff{};
-	harpoon::memory::memory_weak_ptr _ram_0100_3fff{};
-	harpoon::memory::memory_weak_ptr _ram_4000_7fff{};
+	harpoon::memory::memory_ptr _zero_page_0000_00ff{};
+	harpoon::memory::memory_ptr _ram_0100_3fff{};
+	harpoon::memory::memory_ptr _ram_4000_7fff{};
 
-	harpoon::memory::multiplexed_memory_weak_ptr _mplx_d000_dfff{};
-	harpoon::memory::memory_weak_ptr _ram_d000_dfff{};
-	harpoon::memory::memory_weak_ptr _character_rom_d000_dfff{};
-	harpoon::memory::memory_weak_ptr _io_d000_dfff{};
+	harpoon::memory::multiplexed_memory_ptr _mplx_d000_dfff{};
+	harpoon::memory::memory_ptr _ram_d000_dfff{};
+	harpoon::memory::memory_ptr _character_rom_d000_dfff{};
+	harpoon::memory::memory_ptr _io_d000_dfff{};
 
-	harpoon::memory::memory_weak_ptr _ram_e000_ffff{};
+	harpoon::memory::memory_ptr _ram_e000_ffff{};
 };
 
 } // namespace memory

@@ -22,7 +22,6 @@ private:
 };
 
 using memory_ptr = std::shared_ptr<memory>;
-using memory_weak_ptr = std::weak_ptr<memory>;
 
 } // namespace memory
 } // namespace hw
