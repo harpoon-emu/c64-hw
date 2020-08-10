@@ -1,67 +1,202 @@
 version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.2
 commands:
-  build:
-    steps:
-      - checkout
-      - run:
-          name: Generate cmake
-          working_directory: build
-          command: cmake -DHarpoon_DIR=~/.deps/.install/share/Harpoon/cmake ..
-      - run:
-          name: Build
-          working_directory: build
-          command: make
-  deps:
+  deps-clone:
     steps:
       - run:
-          name: "Harpoon: clone"
-          working_directory: ~/.deps
+          name: Checkout Harpoon
+          working_directory: .deps
           command: git clone https://github.com/harpoon-emu/harpoon
+  build:
+    parameters:
+      compiler:
+        type: enum
+        enum: ["gcc", "clang"]
+      os:
+        type: enum
+        enum: ["fedora-31", "fedora-32"]
+      build:
+        type: enum
+        enum: ["Debug", "Release"]
+      codecov:
+        type: boolean
+        default: OFF
+    steps:
+      - attach_workspace:
+          at: .
       - run:
-          name: "Harpoon: cmake"
-          working_directory: ~/.deps/harpoon/build
-          command: cmake ..
+          name: "Harpoon: Generate cmake"
+          working_directory: .deps/harpoon
+          command: cmake -DCMAKE_INSTALL_PREFIX=~/project/<< parameters.compiler >>-<< parameters.os >>-<< parameters.build >>/.deps/.install -DCODE_COVERAGE=<< parameters.codecov >> -B << parameters.compiler >>-<< parameters.os >>-<< parameters.build >> .
       - run:
-          name: "Harpoon: build"
-          working_directory: ~/.deps/harpoon/build
-          command: make
+          name: "Harpoon: Build"
+          working_directory: .deps/harpoon
+          command: cmake --build << parameters.compiler >>-<< parameters.os >>-<< parameters.build >> -j
       - run:
           name: "Harpoon: install"
-          working_directory: ~/.deps/harpoon/build
-          command: make install
-
+          working_directory: .deps/harpoon
+          command: cmake --install << parameters.compiler >>-<< parameters.os >>-<< parameters.build >>
+      - run:
+          name: Generate cmake
+          command: cmake -DHarpoon_DIR=<< parameters.compiler >>-<< parameters.os >>-<< parameters.build >>/.deps/.install/share/Harpoon/cmake -DCMAKE_BUILD_TYPE=<< parameters.build >> -DCODE_COVERAGE=<< parameters.codecov >> -B << parameters.compiler >>-<< parameters.os >>-<< parameters.build >> .
+      - run:
+          name: Build
+          command: cmake --build << parameters.compiler >>-<< parameters.os >>-<< parameters.build >> -j
+      - persist_to_workspace:
+          root: .
+          paths:
+            -  << parameters.compiler >>-<< parameters.os >>-<<parameters.build >>
+  test:
+    parameters:
+      compiler:
+        type: enum
+        enum: ["gcc", "clang"]
+      os:
+        type: enum
+        enum: ["fedora-31", "fedora-32"]
+      build:
+        type: enum
+        enum: ["Debug", "Release"]
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests
+          command: cd << parameters.compiler >>-<< parameters.os >>-<<parameters.build >> && ctest
+      - persist_to_workspace:
+          root: .
+          paths:
+            -  << parameters.compiler >>-<< parameters.os >>-<<parameters.build >>
+      - store_artifacts:
+          path: << parameters.compiler >>-<< parameters.os >>-<<parameters.build >>/Testing/Temporary
+          destination: test-results
+  codecov:
+    parameters:
+      compiler:
+        type: enum
+        enum: ["gcc", "clang"]
+      os:
+        type: enum
+        enum: ["fedora-31", "fedora-32"]
+      build:
+        type: enum
+        enum: ["Debug", "Release"]
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Generate code coverage report
+          command: |
+                  cd << parameters.compiler >>-<< parameters.os >>-<<parameters.build >>
+                  lcov --capture --directory . --output-file coverage.info
+                  lcov --remove coverage.info '/usr/*' --output-file coverage.info
+                  lcov --remove coverage.info '*/test/*' --output-file coverage.info
+                  lcov --remove coverage.info '*/googletest/*' --output-file coverage.info
+                  bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
+      - codecov/upload:
+          file: << parameters.compiler >>-<< parameters.os >>-<<parameters.build >>/coverage.info
+      - store_artifacts:
+          path: << parameters.compiler >>-<< parameters.os >>-<<parameters.build >>/coverage.info
+          destination: coverage-report
 jobs:
-  build-gcc-fedora-31:
+  prepare:
     docker:
-      - image: harpoonemu/ci-build:gcc-fedora-31-fd8961b
+      - image: harpoonemu/ci-build:gcc-fedora-32-14678b4
     steps:
-      - deps
-      - build
-  build-gcc-fedora-32:
+      - checkout
+      - deps-clone
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+  build-gcc-fedora-32-Debug:
     docker:
-      - image: harpoonemu/ci-build:gcc-fedora-32-fd8961b
+      - image: harpoonemu/ci-build:gcc-fedora-32-14678b4
     steps:
-      - deps
-      - build
-  build-clang-fedora-31:
+      - build:
+          os: fedora-32
+          compiler: gcc
+          build: Debug
+  test-gcc-fedora-32-Debug:
     docker:
-      - image: harpoonemu/ci-build:clang-fedora-31-fd8961b
+      - image: harpoonemu/ci-build:gcc-fedora-32-14678b4
     steps:
-      - deps
-      - build
-  build-clang-fedora-32:
+      - test:
+          os: fedora-32
+          compiler: gcc
+          build: Debug
+  codecov-gcc-fedora-32-Debug:
     docker:
-      - image: harpoonemu/ci-build:clang-fedora-32-fd8961b
+      - image: harpoonemu/ci-build:gcc-fedora-32-14678b4
     steps:
-      - deps
-      - build
+      - codecov:
+          os: fedora-32
+          compiler: gcc
+          build: Debug
+  build-clang-fedora-32-Debug:
+    docker:
+      - image: harpoonemu/ci-build:clang-fedora-32-14678b4
+    steps:
+      - build:
+          os: fedora-32
+          compiler: clang
+          build: Debug
+  test-clang-fedora-32-Debug:
+    docker:
+      - image: harpoonemu/ci-build:clang-fedora-32-14678b4
+    steps:
+      - test:
+          os: fedora-32
+          compiler: clang
+          build: Debug
+  build-gcc-fedora-32-Release:
+    docker:
+      - image: harpoonemu/ci-build:gcc-fedora-32-14678b4
+    steps:
+      - build:
+          os: fedora-32
+          compiler: gcc
+          build: Release
+  test-gcc-fedora-32-Release:
+    docker:
+      - image: harpoonemu/ci-build:gcc-fedora-32-14678b4
+    steps:
+      - test:
+          os: fedora-32
+          compiler: gcc
+          build: Release
+  build-clang-fedora-32-Release:
+    docker:
+      - image: harpoonemu/ci-build:clang-fedora-32-14678b4
+    steps:
+      - build:
+          os: fedora-32
+          compiler: clang
+          build: Release
+  test-clang-fedora-32-Release:
+    docker:
+      - image: harpoonemu/ci-build:clang-fedora-32-14678b4
+    steps:
+      - test:
+          os: fedora-32
+          compiler: clang
+          build: Release
 
 workflows:
   build:
     jobs:
-      - build-gcc-fedora-31
-      - build-gcc-fedora-32
-      - build-clang-fedora-31
-      - build-clang-fedora-32
-      
-      
+      - prepare
+      - build-gcc-fedora-32-Debug:
+          requires:
+            - prepare
+      - build-clang-fedora-32-Debug:
+          requires:
+            - prepare
+      - build-gcc-fedora-32-Release:
+          requires:
+            - prepare
+      - build-clang-fedora-32-Release:
+          requires:
+            - prepare
+
