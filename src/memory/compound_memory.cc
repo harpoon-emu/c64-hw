@@ -76,15 +76,15 @@ void compound_memory::create() {
 	write_memory->add_memory(ram, false);
 }
 
-void compound_memory::add_read_memory(const harpoon::memory::memory_weak_ptr &memory) {
-	_read_memory.lock()->add_memory(memory, false);
+void compound_memory::add_read_memory(const harpoon::memory::memory_ptr &memory) {
+	_read_memory->add_memory(memory, false);
 }
 
-void compound_memory::add_write_memory(const harpoon::memory::memory_weak_ptr &memory) {
-	_write_memory.lock()->add_memory(memory, false);
+void compound_memory::add_write_memory(const harpoon::memory::memory_ptr &memory) {
+	_write_memory->add_memory(memory, false);
 }
 
-void compound_memory::add_memory(const harpoon::memory::memory_weak_ptr &memory, bool) {
+void compound_memory::add_memory(const harpoon::memory::memory_ptr &memory, bool) {
 	add_read_memory(memory);
 	add_write_memory(memory);
 }
@@ -118,29 +118,29 @@ void compound_memory::create_d000_dfff_area() {
 	mplx->add_memory(2, rom, false);
 	mplx->add_memory(3, rom, false);
 
-	_read_memory.lock()->add_memory(_mplx_d000_dfff, false);
-	_write_memory.lock()->add_memory(_mplx_d000_dfff, false);
+	_read_memory->add_memory(_mplx_d000_dfff, false);
+	_write_memory->add_memory(_mplx_d000_dfff, false);
 }
 
 void compound_memory::serialize(harpoon::memory::serializer::serializer &serializer) {
-	_read_memory.lock()->serialize(serializer);
+	_read_memory->serialize(serializer);
 }
 
 void compound_memory::deserialize(harpoon::memory::deserializer::deserializer &deserializer) {
-	_read_memory.lock()->deserialize(deserializer);
+	_read_memory->deserialize(deserializer);
 }
 
 void compound_memory::get_cell(harpoon::memory::address address, std::uint8_t &value) {
-	_read_memory.lock()->get(address, value);
+	_read_memory->get(address, value);
 }
 
 void compound_memory::set_cell(harpoon::memory::address address, std::uint8_t value) {
-	_write_memory.lock()->set(address, value);
+	_write_memory->set(address, value);
 }
 
 void compound_memory::switch_d000_dfff(harpoon::memory::multiplexed_memory::memory_id mem_id) {
 	log(component_debug << "Switching $D000-$DFFF to " << mem_id);
-	_mplx_d000_dfff.lock()->switch_memory(mem_id);
+	_mplx_d000_dfff->switch_memory(mem_id);
 }
 
 } // namespace memory

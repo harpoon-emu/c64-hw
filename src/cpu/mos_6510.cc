@@ -39,11 +39,10 @@ void mos_6510::init_registers() {
 }
 
 void mos_6510::init_zero_page() {
-	auto zp = _zero_page.lock();
 	std::map<harpoon::memory::address, std::uint8_t> data = {{0x00, 0x2F}, {0x01, 0x37}};
 
 	for (auto &cell : data) {
-		zp->set(cell.first, cell.second);
+		_zero_page->set(cell.first, cell.second);
 	}
 }
 

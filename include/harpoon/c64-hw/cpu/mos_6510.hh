@@ -35,7 +35,7 @@ public:
 
 	using zero_page_memory
 	    = harpoon::memory::io_memory<harpoon::memory::linear_random_access_memory>;
-	using zero_page_memory_weak_ptr = std::weak_ptr<zero_page_memory>;
+	using zero_page_memory_ptr = std::shared_ptr<zero_page_memory>;
 
 	using instruction_factory = std::function<harpoon::execution::instruction(mos_6510 *)>;
 
@@ -60,16 +60,16 @@ public:
 
 	virtual void step(hardware_component *trigger) override;
 
-	const zero_page_memory_weak_ptr &get_zero_page() const {
+	const zero_page_memory_ptr &get_zero_page() const {
 		return _zero_page;
 	}
 
-	void set_memory(const memory::memory_weak_ptr &memory) {
+	void set_memory(const memory::memory_ptr &memory) {
 		_memory = memory;
 	}
 
-	memory::memory_ptr get_memory() const {
-		return _memory.lock();
+	const memory::memory_ptr &get_memory() const {
+		return _memory;
 	}
 
 	void set_init_PC(std::uint16_t v) {
@@ -254,8 +254,8 @@ private:
 	void _zp_01_processor_port_out(const harpoon::memory::address &address, std::uint8_t value);
 
 	struct registers _registers {};
-	memory::memory_weak_ptr _memory{};
-	zero_page_memory_weak_ptr _zero_page{};
+	memory::memory_ptr _memory{};
+	zero_page_memory_ptr _zero_page{};
 
 	std::array<instruction_factory, 256> _instruction_factories{};
 
