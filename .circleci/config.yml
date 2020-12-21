@@ -118,6 +118,7 @@ jobs:
           os: fedora-32
           compiler: gcc
           build: Debug
+          codecov: ON
   test-gcc-fedora-32-Debug:
     docker:
       - image: harpoonemu/ci-build:gcc-fedora-32-14678b4
@@ -190,13 +191,28 @@ workflows:
       - build-gcc-fedora-32-Debug:
           requires:
             - prepare
+      - test-gcc-fedora-32-Debug:
+          requires:
+            - build-gcc-fedora-32-Debug
+      - codecov-gcc-fedora-32-Debug:
+          requires:
+            - test-gcc-fedora-32-Debug
       - build-clang-fedora-32-Debug:
           requires:
             - prepare
+      - test-clang-fedora-32-Debug:
+          requires:
+            - build-clang-fedora-32-Debug
       - build-gcc-fedora-32-Release:
           requires:
             - prepare
+      - test-gcc-fedora-32-Release:
+          requires:
+            - build-gcc-fedora-32-Release
       - build-clang-fedora-32-Release:
           requires:
             - prepare
+      - test-clang-fedora-32-Release:
+          requires:
+            - build-clang-fedora-32-Release
 

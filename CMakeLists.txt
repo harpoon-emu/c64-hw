@@ -8,8 +8,11 @@ set(C64-hw_VERSION
 
 project(C64-hw LANGUAGES CXX C VERSION ${C64-hw_VERSION})
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
+include(CTest)
 
 find_package(Harpoon REQUIRED)
 
@@ -102,6 +105,21 @@ target_include_directories(c64-hw
 
 target_link_libraries(c64-hw Harpoon::harpoon)
 
+option(CODE_COVERAGE "Enable coverage reporting" OFF)
+if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+	target_compile_options(c64-hw PUBLIC
+		-O0
+		-g
+		-fprofile-arcs
+		--coverage
+		)
+	if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+		target_link_options(c64-hw PUBLIC --coverage)
+	else()
+		target_link_libraries(c64-hw PUBLIC --coverage)
+	endif()
+endif()
+
 install(TARGETS c64-hw EXPORT Harpoon_C64-hwTargets
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -127,3 +145,16 @@ install(FILES
 )
 
 export(TARGETS c64-hw NAMESPACE Harpoon:: FILE Harpoon_C64-hwConfig.cmake)
+
+# GTEST
+
+enable_testing()
+
+if (BUILD_TESTING)
+	include(cmake/googletest.cmake)
+	fetch_googletest(
+		${PROJECT_SOURCE_DIR}/cmake
+		${PROJECT_BINARY_DIR}/googletest
+		)
+	add_subdirectory(test)
+endif()
