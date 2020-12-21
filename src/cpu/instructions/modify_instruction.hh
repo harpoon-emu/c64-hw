@@ -35,10 +35,9 @@ harpoon::execution::instruction zero_page_x_modify_factory(harpoon::execution::p
 	    {
 	        make_instruction_step<fetch_program_code>(),
 	        make_instruction_step<internal_read>(),
-	        make_instruction_step<
-	            load_latch<&instruction_step::fetch_zero_page_reg<&mos_6510::get_X>>>(),
+	        make_instruction_step<load_latch<&instruction_step::fetch_zero_page_X>>(),
 	        make_instruction_step<internal_write>(),
-	        make_instruction_step<I<&instruction_step::store_zero_page_reg<&mos_6510::get_X>>>(),
+	        make_instruction_step<I<&instruction_step::store_zero_page_X>>(),
 	    },
 	    disassembler::zero_page_x(mnemonic));
 }
@@ -54,7 +53,7 @@ harpoon::execution::instruction zero_page_y_modify_factory(harpoon::execution::p
 	        make_instruction_step<
 	            load_latch<&instruction_step::fetch_zero_page_reg<&mos_6510::get_Y>>>(),
 	        make_instruction_step<internal_write>(),
-	        make_instruction_step<I<&instruction_step::store_zero_page_reg<&mos_6510::get_X>>>(),
+	        make_instruction_step<I<&instruction_step::store_zero_page_X>>(),
 	    },
 	    disassembler::zero_page_y(mnemonic));
 }
@@ -83,10 +82,9 @@ harpoon::execution::instruction absolute_x_modify_factory(harpoon::execution::pr
 	        make_instruction_step<fetch_program_code>(),
 	        make_instruction_step<fetch_program_code>(),
 	        make_instruction_step<internal_read>(),
-	        make_instruction_step<
-	            load_latch<&instruction_step::fetch_absolute_reg<&mos_6510::get_X>>>(),
+	        make_instruction_step<load_latch<&instruction_step::fetch_absolute_X>>(),
 	        make_instruction_step<internal_write>(),
-	        make_instruction_step<I<&instruction_step::store_absolute_reg<&mos_6510::get_X>>>(),
+	        make_instruction_step<I<&instruction_step::store_absolute_X>>(),
 	    },
 	    disassembler::absolute_x(mnemonic));
 }

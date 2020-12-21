@@ -52,6 +52,10 @@ public:
 		fetch_zero_page_index(v, (get_cpu()->*get_reg)(), update_nz);
 	}
 
+	void fetch_zero_page_X(std::uint8_t &v, bool update_nz = true) {
+		fetch_zero_page_index(v, get_cpu()->get_X(), update_nz);
+	}
+
 	void fetch_absolute(std::uint8_t &v, bool update_nz = true) {
 		fetch_absolute_index(v, 0, update_nz);
 	}
@@ -59,6 +63,10 @@ public:
 	template<std::uint8_t (mos_6510::*get_reg)() const>
 	void fetch_absolute_reg(std::uint8_t &v, bool update_nz = true) {
 		fetch_absolute_index(v, (get_cpu()->*get_reg)(), update_nz);
+	}
+
+	void fetch_absolute_X(std::uint8_t &v, bool update_nz = true) {
+		fetch_absolute_index(v, get_cpu()->get_X(), update_nz);
 	}
 
 	void fetch_indirect(std::uint8_t &v, bool update_nz = true) {
@@ -78,6 +86,10 @@ public:
 		store_zero_page_index((get_cpu()->*get_reg)(), v);
 	}
 
+	void store_zero_page_X(std::uint8_t v) {
+		store_zero_page_index(get_cpu()->get_X(), v);
+	}
+
 	void store_absolute(std::uint8_t v) {
 		store_absolute_index(0, v);
 	}
@@ -85,6 +97,10 @@ public:
 	template<std::uint8_t (mos_6510::*get_reg)() const>
 	void store_absolute_reg(std::uint8_t v) {
 		store_absolute_index((get_cpu()->*get_reg)(), v);
+	}
+
+	void store_absolute_X(std::uint8_t v) {
+		store_absolute_index(get_cpu()->get_X(), v);
 	}
 
 	void store_indirect(std::uint8_t v) {
