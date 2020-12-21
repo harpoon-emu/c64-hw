@@ -19,20 +19,20 @@ public:
 
 	virtual ~arith();
 
-	template<typename T>
-	void inc(T &v, bool update_nz = true) {
-		v++;
-		if (update_nz) {
-			update_flags_NZ(v);
-		}
+	void inc(std::uint8_t &v, bool update_nz = true) {
+		_inc(v, update_nz);
 	}
 
-	template<typename T>
-	void dec(T &v, bool update_nz = true) {
-		v--;
-		if (update_nz) {
-			update_flags_NZ(v);
-		}
+	void inc(std::uint16_t &v, bool update_nz = true) {
+		_inc(v, update_nz);
+	}
+
+	void dec(std::uint8_t &v, bool update_nz = true) {
+		_dec(v, update_nz);
+	}
+
+	void dec(std::uint16_t &v, bool update_nz = true) {
+		_dec(v, update_nz);
 	}
 
 	void and_(std::uint8_t &v, std::uint8_t operand, bool update_nz = true) {
@@ -127,6 +127,23 @@ public:
 			update_flags_NZ(v);
 			get_cpu()->set_flag_V(((~(x ^ y)) & (x ^ res) & 0x80) == 0x80);
 			get_cpu()->set_flag_C(res > 0xff);
+		}
+	}
+
+private:
+	template<typename T>
+	void _inc(T &v, bool update_nz) {
+		v++;
+		if (update_nz) {
+			update_flags_NZ(v);
+		}
+	}
+
+	template<typename T>
+	void _dec(T &v, bool update_nz = true) {
+		v--;
+		if (update_nz) {
+			update_flags_NZ(v);
 		}
 	}
 };
