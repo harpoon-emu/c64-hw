@@ -34,7 +34,7 @@ public:
 	void set_flags(std::uint8_t flags) {
 		N() = ((flags & 0x80) != 0);
 		V() = ((flags & 0x40) != 0);
-		B() = true;
+		B() = ((flags & 0x10) != 0);
 		D() = ((flags & 0x08) != 0);
 		I() = ((flags & 0x04) != 0);
 		Z() = ((flags & 0x02) != 0);
