@@ -23,12 +23,12 @@ public:
 	}
 
 	void update_flag_Z(T v) const {
-		get_cpu()->get_registers().P.Z() = (v == 0);
+		get_cpu()->set_flag_Z(v == 0);
 	}
 
 	void update_flag_N(T v) const {
 		T h = 1 << ((sizeof(T) * 8) - 1);
-		get_cpu()->get_registers().P.N() = ((v & h) == h);
+		get_cpu()->set_flag_N((v & h) == h);
 	}
 
 	void update_flags_NZ(T v) const {
