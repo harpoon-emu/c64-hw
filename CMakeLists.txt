@@ -21,65 +21,7 @@ add_library(c64-hw SHARED
 	src/memory/memory.cc
 	src/memory/compound_memory.cc
 	src/cpu/mos_6510.cc
-	src/cpu/instructions/pha.cc
-	src/cpu/instructions/ror.cc
-	src/cpu/instructions/bne.cc
-	src/cpu/instructions/sed.cc
-	src/cpu/instructions/sei.cc
-	src/cpu/instructions/cld.cc
-	src/cpu/instructions/rts.cc
-	src/cpu/instructions/dex.cc
-	src/cpu/instructions/brk.cc
-	src/cpu/instructions/lda.cc
-	src/cpu/instructions/dey.cc
-	src/cpu/instructions/cli.cc
-	src/cpu/instructions/tya.cc
-	src/cpu/instructions/stx.cc
-	src/cpu/instructions/plp.cc
-	src/cpu/instructions/sec.cc
-	src/cpu/instructions/ora.cc
-	src/cpu/instructions/nop.cc
-	src/cpu/instructions/bmi.cc
-	src/cpu/instructions/clv.cc
-	src/cpu/instructions/rti.cc
-	src/cpu/instructions/txs.cc
-	src/cpu/instructions/adc.cc
-	src/cpu/instructions/txa.cc
-	src/cpu/instructions/bvc.cc
-	src/cpu/instructions/cpx.cc
-	src/cpu/instructions/and.cc
-	src/cpu/instructions/tax.cc
-	src/cpu/instructions/cpy.cc
-	src/cpu/instructions/ldx.cc
-	src/cpu/instructions/bcs.cc
-	src/cpu/instructions/ldy.cc
-	src/cpu/instructions/sty.cc
-	src/cpu/instructions/pla.cc
-	src/cpu/instructions/bcc.cc
-	src/cpu/instructions/eor.cc
-	src/cpu/instructions/jmp.cc
-	src/cpu/instructions/php.cc
-	src/cpu/instructions/rol.cc
-	src/cpu/instructions/jsr.cc
-	src/cpu/instructions/bit.cc
-	src/cpu/instructions/bvs.cc
-	src/cpu/instructions/cmp.cc
-	src/cpu/instructions/iny.cc
-	src/cpu/instructions/tay.cc
-	src/cpu/instructions/beq.cc
-	src/cpu/instructions/inx.cc
-	src/cpu/instructions/instruction_step.cc
-	src/cpu/instructions/tsx.cc
-	src/cpu/instructions/sbc.cc
-	src/cpu/instructions/bpl.cc
-	src/cpu/instructions/lsr.cc
-	src/cpu/instructions/inc.cc
 	src/cpu/instructions/disassembler.cc
-	src/cpu/instructions/clc.cc
-	src/cpu/instructions/sta.cc
-	src/cpu/instructions/asl.cc
-	src/cpu/instructions/arith_instruction.cc
-	src/cpu/instructions/dec.cc
 	src/c64.cc
 )
 

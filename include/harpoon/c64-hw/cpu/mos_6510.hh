@@ -244,7 +244,7 @@ private:
 
 	void init_instructions();
 
-	template<typename T>
+	template<template<typename CPU> class T>
 	void register_instruction_factory();
 
 	void boot_sequence();
