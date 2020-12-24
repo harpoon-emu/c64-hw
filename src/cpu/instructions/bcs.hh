@@ -1,6 +1,8 @@
 #ifndef CPU_INSTRUCTIONS_BCS_HH
 #define CPU_INSTRUCTIONS_BCS_HH
 
+#include "branch_instruction.hh"
+
 #include <harpoon/execution/instruction.hh>
 
 namespace c64 {
@@ -11,9 +13,12 @@ namespace bcs {
 
 static constexpr const char *MNEMONIC = "BCS";
 
+template<typename CPU>
 struct relative {
 	static constexpr const std::uint8_t OPCODE = 0xB0;
-	static harpoon::execution::instruction factory(harpoon::execution::processing_unit *cpu);
+	static harpoon::execution::instruction factory(CPU *cpu) {
+		return relative_branch_factory<CPU, flag_C_accessor<CPU>, true>(cpu, MNEMONIC);
+	}
 };
 
 } // namespace bcs
