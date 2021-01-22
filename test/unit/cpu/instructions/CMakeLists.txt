@@ -1,6 +1,7 @@
 add_executable(
-    t_cpu_instructions_runner
-    instruction_step_op.cc
+	t_cpu_instructions_runner
+	cpu_accessor.cc
+	instruction_step_op.cc
 )
 
 target_link_libraries(
