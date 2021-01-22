@@ -1,6 +1,6 @@
 #include "disassembler.hh"
 
-#include "harpoon/c64-hw/cpu/mos_6510.hh"
+#include <harpoon/c64-hw/cpu/mos_6510.hh>
 
 #include <iomanip>
 

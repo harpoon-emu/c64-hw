@@ -2,7 +2,9 @@
 
 #include <gtest/gtest.h>
 
-namespace {
+namespace test {
+namespace unit {
+namespace cpu {
 
 class mos_6510_flags : public ::testing::Test {
 protected:
@@ -152,4 +154,6 @@ TEST_F(mos_6510_flags, unused_clear) {
 	EXPECT_EQ(_flags.get_flags(), f);
 }
 
-} // namespace
+} // namespace cpu
+} // namespace unit
+} // namespace test

@@ -200,11 +200,11 @@ void mos_6510::init_instructions() {
 	register_instruction_factory<instructions::tya::implied>();
 }
 
-template<typename T>
+template<template<typename CPU> class T>
 void mos_6510::register_instruction_factory() {
-	_instruction_factories[T::OPCODE] = T::factory;
+	_instruction_factories[T<mos_6510>::OPCODE] = T<mos_6510>::factory;
 	log(component_debug << "Registered instruction with opcode 0x" << std::hex << std::setfill('0')
-	                    << std::setw(2) << static_cast<std::uint32_t>(T::OPCODE));
+	                    << std::setw(2) << static_cast<std::uint32_t>(T<mos_6510>::OPCODE));
 }
 
 void mos_6510::boot() {

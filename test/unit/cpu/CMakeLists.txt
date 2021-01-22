@@ -1,3 +1,5 @@
+add_subdirectory(instructions)
+
 add_executable(
     t_cpu_runner
     mos_6510_flags.cc

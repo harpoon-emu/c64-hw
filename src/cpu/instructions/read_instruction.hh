@@ -1,10 +1,9 @@
 #ifndef CPU_INSTRUCTIONS_READ_INSTRUCTION_HH
 #define CPU_INSTRUCTIONS_READ_INSTRUCTION_HH
 
+#include "data_accessor.hh"
 #include "disassembler.hh"
 #include "instruction_step.hh"
-
-#include "harpoon/c64-hw/cpu/mos_6510.hh"
 
 #include <functional>
 
@@ -13,165 +12,154 @@ namespace hw {
 namespace cpu {
 namespace instructions {
 
-template<typename T, void (mos_6510::*set_reg)(T), void (instruction_step::*fetch)(T &, bool),
-         bool update_nz>
-class load_register : public instruction_step_read {
-	using instruction_step_read::instruction_step_read;
+template<typename CPU, typename T, typename REG, typename DATA, bool update_flags>
+class load_register : public instruction_step_read<CPU> {
+	using instruction_step_read<CPU>::instruction_step_read;
 
 	virtual void execute() override {
 		T v;
-		(this->*fetch)(v, update_nz);
-		(get_cpu()->*set_reg)(v);
+		REG r(instruction_step_read<CPU>::get_cpu(), this);
+		DATA d(instruction_step_read<CPU>::get_cpu(), this);
+		v = d.fetch(update_flags);
+		r.set(v);
 	}
 };
 
-template<void (instruction_step::*fetch)(std::uint8_t &, bool)>
-using load_latch = load_register<std::uint8_t, &mos_6510::set_latch, fetch, false>;
+template<typename CPU, typename DATA>
+using load_latch = load_register<CPU, std::uint8_t, latch_accessor<CPU>, DATA, false>;
 
-template<typename T, T (mos_6510::*get_reg)() const, void (mos_6510::*set_reg)(T), bool update_nz>
+template<typename CPU, typename T, typename SREG, typename DREG, bool update_flags>
 using transfer_register
-    = load_register<T, set_reg, &instruction_step::fetch_register<T, get_reg>, update_nz>;
+    = load_register<CPU, T, SREG, register_accessor<CPU, T, DREG>, update_flags>;
 
-template<std::uint8_t (mos_6510::*get_reg)() const,
-         void (instruction_step::*fetch)(std::uint8_t &, bool)>
-class compare_register : public instruction_step_read {
-	using instruction_step_read::instruction_step_read;
+template<typename CPU, typename REG, typename DATA>
+class compare_register : public instruction_step_read<CPU> {
+	using instruction_step_read<CPU>::instruction_step_read;
 
 	virtual void execute() override {
 		std::uint8_t a, m, r;
-		a = (get_cpu()->*get_reg)();
-		(this->*fetch)(m, false);
+		REG reg(instruction_step_read<CPU>::get_cpu(), this);
+		DATA d(instruction_step_read<CPU>::get_cpu(), this);
+
+		a = reg.get();
+		m = d.fetch(false);
 		r = a - m;
 
-		get_cpu()->get_registers().P.N() = ((r & 0x80) == 0x80);
-		get_cpu()->get_registers().P.Z() = (r == 0x00);
-		get_cpu()->get_registers().P.C() = (a >= m);
+		instruction_step_read<CPU>::get_cpu()->get_registers().P.N() = ((r & 0x80) == 0x80);
+		instruction_step_read<CPU>::get_cpu()->get_registers().P.Z() = (r == 0x00);
+		instruction_step_read<CPU>::get_cpu()->get_registers().P.C() = (a >= m);
 	}
 };
 
-template<typename T, T (mos_6510::*get_reg)() const, void (mos_6510::*set_reg)(T), bool update_nz>
-harpoon::execution::instruction transfer_register_factory(harpoon::execution::processing_unit *cpu,
-                                                          const std::string &mnemonic) {
+template<typename CPU, typename T, typename SREG, typename DREG, bool update_flags>
+harpoon::execution::instruction transfer_register_factory(CPU *cpu, const std::string &mnemonic) {
 	return harpoon::execution::instruction(
-	    cpu, {make_instruction_step<transfer_register<T, get_reg, set_reg, update_nz>>()},
+	    cpu, {make_instruction_step<transfer_register<CPU, T, SREG, DREG, update_flags>>()},
 	    disassembler::implied(mnemonic));
 }
 
-template<template<void (instruction_step::*fetch)(std::uint8_t &, bool)> class I>
-harpoon::execution::instruction immediate_read_factory(harpoon::execution::processing_unit *cpu,
-                                                       const std::string &mnemonic) {
+template<typename CPU, template<typename _CPU, typename _DATA> class I>
+harpoon::execution::instruction immediate_read_factory(CPU *cpu, const std::string &mnemonic) {
 	return harpoon::execution::instruction(
-	    cpu, {make_instruction_step<I<&instruction_step::fetch_immediate>>()},
+	    cpu, {make_instruction_step<I<CPU, immediate_accessor<CPU, std::uint8_t>>>()},
 	    disassembler::immediate(mnemonic));
 }
 
-template<template<void (instruction_step::*fetch)(std::uint8_t &, bool)> class I>
-harpoon::execution::instruction zero_page_read_factory(harpoon::execution::processing_unit *cpu,
-                                                       const std::string &mnemonic) {
+template<typename CPU, template<typename _CPU, typename _DATA> class I>
+harpoon::execution::instruction zero_page_read_factory(CPU *cpu, const std::string &mnemonic) {
 	return harpoon::execution::instruction(
 	    cpu,
 	    {
-	        make_instruction_step<fetch_program_code>(),
-	        make_instruction_step<I<&instruction_step::fetch_zero_page>>(),
+	        make_instruction_step<fetch_program_code<CPU>>(),
+	        make_instruction_step<I<CPU, zero_page_accessor<CPU>>>(),
 	    },
 	    disassembler::zero_page(mnemonic));
 }
 
-template<template<void (instruction_step::*fetch)(std::uint8_t &, bool)> class I,
-         std::uint8_t (mos_6510::*get_reg)() const, typename D>
-harpoon::execution::instruction
-zero_page_index_read_factory(harpoon::execution::processing_unit *cpu,
-                             const std::string &mnemonic) {
+template<typename CPU, template<typename _CPU, typename _DATA> class I, typename REG, typename D>
+harpoon::execution::instruction zero_page_index_read_factory(CPU *cpu,
+                                                             const std::string &mnemonic) {
 	return harpoon::execution::instruction(
 	    cpu,
 	    {
-	        make_instruction_step<fetch_program_code>(),
-	        make_instruction_step<internal_read>(),
-	        make_instruction_step<I<&instruction_step::fetch_zero_page_reg<get_reg>>>(),
+	        make_instruction_step<fetch_program_code<CPU>>(),
+	        make_instruction_step<internal_read<CPU>>(),
+	        make_instruction_step<I<CPU, indexed_zero_page_accessor<CPU, REG>>>(),
 	    },
 	    D(mnemonic));
 }
 
-template<template<void (instruction_step::*fetch)(std::uint8_t &, bool)> class I>
-harpoon::execution::instruction zero_page_x_read_factory(harpoon::execution::processing_unit *cpu,
-                                                         const std::string &mnemonic) {
-	return zero_page_index_read_factory<I, &mos_6510::get_X, disassembler::zero_page_x>(cpu,
-	                                                                                    mnemonic);
+template<typename CPU, template<typename _CPU, typename _DATA> class I>
+harpoon::execution::instruction zero_page_x_read_factory(CPU *cpu, const std::string &mnemonic) {
+	return zero_page_index_read_factory<CPU, I, X_accessor<CPU>, disassembler::zero_page_x>(
+	    cpu, mnemonic);
 }
 
-template<template<void (instruction_step::*fetch)(std::uint8_t &, bool)> class I>
-harpoon::execution::instruction zero_page_y_read_factory(harpoon::execution::processing_unit *cpu,
-                                                         const std::string &mnemonic) {
-	return zero_page_index_read_factory<I, &mos_6510::get_Y, disassembler::zero_page_y>(cpu,
-	                                                                                    mnemonic);
+template<typename CPU, template<typename _CPU, typename _DATA> class I>
+harpoon::execution::instruction zero_page_y_read_factory(CPU *cpu, const std::string &mnemonic) {
+	return zero_page_index_read_factory<CPU, I, Y_accessor<CPU>, disassembler::zero_page_y>(
+	    cpu, mnemonic);
 }
 
-template<template<void (instruction_step::*fetch)(std::uint8_t &, bool)> class I>
-harpoon::execution::instruction absolute_read_factory(harpoon::execution::processing_unit *cpu,
-                                                      const std::string &mnemonic) {
+template<typename CPU, template<typename _CPU, typename _DATA> class I>
+harpoon::execution::instruction absolute_read_factory(CPU *cpu, const std::string &mnemonic) {
 	return harpoon::execution::instruction(
 	    cpu,
 	    {
-	        make_instruction_step<fetch_program_code>(),
-	        make_instruction_step<fetch_program_code>(),
-	        make_instruction_step<I<&instruction_step::fetch_absolute>>(),
+	        make_instruction_step<fetch_program_code<CPU>>(),
+	        make_instruction_step<fetch_program_code<CPU>>(),
+	        make_instruction_step<I<CPU, absolute_accessor<CPU>>>(),
 	    },
 	    disassembler::absolute(mnemonic));
 }
 
-template<template<void (instruction_step::*fetch)(std::uint8_t &, bool)> class I,
-         std::uint8_t (mos_6510::*get_reg)() const, typename D>
-harpoon::execution::instruction
-absolute_index_read_factory(harpoon::execution::processing_unit *cpu, const std::string &mnemonic) {
+template<typename CPU, template<typename _CPU, typename _DATA> class I, typename REG, typename D>
+harpoon::execution::instruction absolute_index_read_factory(CPU *cpu, const std::string &mnemonic) {
 	return harpoon::execution::instruction(
 	    cpu,
 	    {
-	        make_instruction_step<fetch_program_code>(),
-	        make_instruction_step<fetch_program_code>(),
-	        make_instruction_step<I<&instruction_step::fetch_absolute_reg<get_reg>>>(),
+	        make_instruction_step<fetch_program_code<CPU>>(),
+	        make_instruction_step<fetch_program_code<CPU>>(),
+	        make_instruction_step<I<CPU, indexed_absolute_accessor<CPU, REG>>>(),
 	    },
 	    D(mnemonic));
 }
 
-template<template<void (instruction_step::*fetch)(std::uint8_t &, bool)> class I>
-harpoon::execution::instruction absolute_x_read_factory(harpoon::execution::processing_unit *cpu,
-                                                        const std::string &mnemonic) {
-	return absolute_index_read_factory<I, &mos_6510::get_X, disassembler::absolute_x>(cpu,
-	                                                                                  mnemonic);
+template<typename CPU, template<typename _CPU, typename _DATA> class I>
+harpoon::execution::instruction absolute_x_read_factory(CPU *cpu, const std::string &mnemonic) {
+	return absolute_index_read_factory<CPU, I, X_accessor<CPU>, disassembler::absolute_x>(cpu,
+	                                                                                      mnemonic);
 }
 
-template<template<void (instruction_step::*fetch)(std::uint8_t &, bool)> class I>
-harpoon::execution::instruction absolute_y_read_factory(harpoon::execution::processing_unit *cpu,
-                                                        const std::string &mnemonic) {
-	return absolute_index_read_factory<I, &mos_6510::get_Y, disassembler::absolute_y>(cpu,
-	                                                                                  mnemonic);
+template<typename CPU, template<typename _CPU, typename _DATA> class I>
+harpoon::execution::instruction absolute_y_read_factory(CPU *cpu, const std::string &mnemonic) {
+	return absolute_index_read_factory<CPU, I, Y_accessor<CPU>, disassembler::absolute_y>(cpu,
+	                                                                                      mnemonic);
 }
 
-template<template<void (instruction_step::*fetch)(std::uint8_t &, bool)> class I>
-harpoon::execution::instruction indirect_x_read_factory(harpoon::execution::processing_unit *cpu,
-                                                        const std::string &mnemonic) {
+template<typename CPU, template<typename _CPU, typename _DATA> class I>
+harpoon::execution::instruction indirect_x_read_factory(CPU *cpu, const std::string &mnemonic) {
 	return harpoon::execution::instruction(
 	    cpu,
 	    {
-	        make_instruction_step<fetch_program_code>(),
-	        make_instruction_step<internal_read>(),
-	        make_instruction_step<fetch_indirect_pointer<true>>(),
-	        make_instruction_step<fetch_indirect_pointer<true>>(),
-	        make_instruction_step<I<&instruction_step::fetch_indirect>>(),
+	        make_instruction_step<fetch_program_code<CPU>>(),
+	        make_instruction_step<internal_read<CPU>>(),
+	        make_instruction_step<fetch_indirect_pointer<CPU, true>>(),
+	        make_instruction_step<fetch_indirect_pointer<CPU, true>>(),
+	        make_instruction_step<I<CPU, indirect_accessor<CPU>>>(),
 	    },
 	    disassembler::indirect_x(mnemonic));
 }
 
-template<template<void (instruction_step::*fetch)(std::uint8_t &, bool)> class I>
-harpoon::execution::instruction indirect_y_read_factory(harpoon::execution::processing_unit *cpu,
-                                                        const std::string &mnemonic) {
+template<typename CPU, template<typename _CPU, typename _DATA> class I>
+harpoon::execution::instruction indirect_y_read_factory(CPU *cpu, const std::string &mnemonic) {
 	return harpoon::execution::instruction(
 	    cpu,
 	    {
-	        make_instruction_step<fetch_program_code>(),
-	        make_instruction_step<fetch_indirect_pointer<false>>(),
-	        make_instruction_step<fetch_indirect_pointer<false>>(),
-	        make_instruction_step<I<&instruction_step::fetch_indirect_y>>(),
+	        make_instruction_step<fetch_program_code<CPU>>(),
+	        make_instruction_step<fetch_indirect_pointer<CPU, false>>(),
+	        make_instruction_step<fetch_indirect_pointer<CPU, false>>(),
+	        make_instruction_step<I<CPU, indexed_indirect_accessor<CPU, Y_accessor<CPU>>>>(),
 	    },
 	    disassembler::indirect_y(mnemonic));
 }

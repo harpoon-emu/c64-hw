@@ -1,9 +1,8 @@
 #ifndef CPU_INSTRUCTIONS_INSTRUCTION_STEP_HH
 #define CPU_INSTRUCTIONS_INSTRUCTION_STEP_HH
 
+#include "cpu_accessor.hh"
 #include "disassembler.hh"
-
-#include "harpoon/c64-hw/cpu/mos_6510.hh"
 
 #include <harpoon/execution/instruction.hh>
 
@@ -14,11 +13,12 @@ namespace hw {
 namespace cpu {
 namespace instructions {
 
+template<typename CPU>
 class instruction_step {
 public:
 	instruction_step(const harpoon::execution::instruction &instruction)
 	    : _instruction{instruction} {
-		_cpu = static_cast<mos_6510 *>(instruction.get_processing_unit());
+		_cpu = static_cast<CPU *>(instruction.get_processing_unit());
 	}
 
 	virtual std::uint32_t check() = 0;
@@ -28,140 +28,13 @@ public:
 	}
 	virtual void execute() = 0;
 
-	template<typename T, T (mos_6510::*get_reg)() const>
-	void fetch_register(T &v, bool update_nz = true) {
-		v = (get_cpu()->*get_reg)();
-		if (update_nz) {
-			update_flags_NZ(v);
-		}
-	}
-
-	void fetch_immediate(std::uint8_t &v, bool update_nz = true) {
-		get_cpu()->get_program_code(v);
-		if (update_nz) {
-			update_flags_NZ(v);
-		}
-	}
-
-	void fetch_zero_page(std::uint8_t &v, bool update_nz = true) {
-		fetch_zero_page_index(v, 0, update_nz);
-	}
-
-	template<std::uint8_t (mos_6510::*get_reg)() const>
-	void fetch_zero_page_reg(std::uint8_t &v, bool update_nz = true) {
-		fetch_zero_page_index(v, (get_cpu()->*get_reg)(), update_nz);
-	}
-
-	void fetch_zero_page_X(std::uint8_t &v, bool update_nz = true) {
-		fetch_zero_page_index(v, get_cpu()->get_X(), update_nz);
-	}
-
-	void fetch_absolute(std::uint8_t &v, bool update_nz = true) {
-		fetch_absolute_index(v, 0, update_nz);
-	}
-
-	template<std::uint8_t (mos_6510::*get_reg)() const>
-	void fetch_absolute_reg(std::uint8_t &v, bool update_nz = true) {
-		fetch_absolute_index(v, (get_cpu()->*get_reg)(), update_nz);
-	}
-
-	void fetch_absolute_X(std::uint8_t &v, bool update_nz = true) {
-		fetch_absolute_index(v, get_cpu()->get_X(), update_nz);
-	}
-
-	void fetch_indirect(std::uint8_t &v, bool update_nz = true) {
-		fetch_indirect_index(v, 0, update_nz);
-	}
-
-	void fetch_indirect_y(std::uint8_t &v, bool update_nz = true) {
-		fetch_indirect_index(v, get_cpu()->get_Y(), update_nz);
-	}
-
-	void store_zero_page(std::uint8_t v) {
-		store_zero_page_index(0, v);
-	}
-
-	template<std::uint8_t (mos_6510::*get_reg)() const>
-	void store_zero_page_reg(std::uint8_t v) {
-		store_zero_page_index((get_cpu()->*get_reg)(), v);
-	}
-
-	void store_zero_page_X(std::uint8_t v) {
-		store_zero_page_index(get_cpu()->get_X(), v);
-	}
-
-	void store_absolute(std::uint8_t v) {
-		store_absolute_index(0, v);
-	}
-
-	template<std::uint8_t (mos_6510::*get_reg)() const>
-	void store_absolute_reg(std::uint8_t v) {
-		store_absolute_index((get_cpu()->*get_reg)(), v);
-	}
-
-	void store_absolute_X(std::uint8_t v) {
-		store_absolute_index(get_cpu()->get_X(), v);
-	}
-
-	void store_indirect(std::uint8_t v) {
-		store_indirect_index(0, v);
-	}
-
-	void store_indirect_y(std::uint8_t v) {
-		store_indirect_index(get_cpu()->get_Y(), v);
-	}
-
-	virtual ~instruction_step();
-
-protected:
-	mos_6510 *get_cpu() const {
-		return _cpu;
-	}
-
 	void set_delay(std::uint32_t d) {
 		_delay = d;
 	}
 
-	void fetch_memory(std::uint8_t &v, std::uint16_t address, std::uint8_t index, bool update_nz) {
-		std::uint16_t a = address + index;
-		get_cpu()->get_memory()->get(a, v);
-		if (update_nz) {
-			update_flags_NZ(v);
-		}
-
-		if ((a & 0xFF00) != (address & 0xFF00)) {
-			set_delay(2);
-		}
-	}
-
-	void fetch_zero_page_index(std::uint8_t &v, std::uint8_t index, bool update_nz) {
-		fetch_memory(v, (get_cpu()->get_internal_memory_access().b.current + index) & 0xFF, 0,
-		             update_nz);
-	}
-
-	void fetch_absolute_index(std::uint8_t &v, std::uint8_t index, bool update_nz) {
-		fetch_memory(v, get_cpu()->get_internal_memory_access().w, index, update_nz);
-	}
-
-	void fetch_indirect_index(std::uint8_t &v, std::uint8_t index, bool update_nz) {
-		fetch_memory(v, get_cpu()->get_indirect_pointer(), index, update_nz);
-	}
-
-	void store_memory(std::uint16_t address, std::uint8_t index, std::uint8_t v) {
-		std::uint16_t a = address + index;
-		get_cpu()->get_memory()->set(a, v);
-	}
-
-	void store_zero_page_index(std::uint8_t index, std::uint8_t v) {
-		store_memory((get_cpu()->get_internal_memory_access().b.current + index) & 0xFF, 0, v);
-	}
-
-	void store_absolute_index(std::uint8_t index, std::uint8_t v) {
-		store_memory(get_cpu()->get_internal_memory_access().w, index, v);
-	}
-
-	void store_indirect_index(std::uint8_t index, std::uint8_t v) {
-		store_memory(get_cpu()->get_indirect_pointer(), index, v);
+protected:
+	CPU *get_cpu() const {
+		return _cpu;
 	}
 
 	template<typename T>
@@ -183,92 +56,110 @@ protected:
 
 private:
 	const harpoon::execution::instruction _instruction{};
-	mos_6510 *_cpu{};
+	CPU *_cpu{};
 	std::uint32_t _delay{1};
 };
 
-class instruction_step_read : public instruction_step {
+template<typename CPU>
+class instruction_step_read : public instruction_step<CPU> {
 public:
-	using instruction_step::instruction_step;
+	using instruction_step<CPU>::instruction_step;
 
-	virtual std::uint32_t check() override;
-};
-
-class instruction_step_fetch_next : public instruction_step_read {
-public:
-	using instruction_step_read::instruction_step_read;
-
-	virtual std::uint32_t step() override;
-};
-
-class instruction_step_write : public instruction_step {
-public:
-	using instruction_step::instruction_step;
-
-	virtual std::uint32_t check() override;
-};
-
-class internal_read : public instruction_step_read {
-public:
-	using instruction_step_read::instruction_step_read;
-
-	virtual void execute() override;
-};
-
-class internal_write : public instruction_step_write {
-public:
-	using instruction_step_write::instruction_step_write;
-
-	virtual void execute() override;
-};
-
-class fetch_program_code : public instruction_step_read {
-public:
-	using instruction_step_read::instruction_step_read;
-
-	virtual void execute() override;
-};
-
-template<bool x_index>
-class fetch_indirect_pointer : public instruction_step_read {
-public:
-	using instruction_step_read::instruction_step_read;
-
-	virtual void execute() override {
-		get_cpu()->fetch_indirect_pointer(x_index);
+	virtual std::uint32_t check() override {
+		return 0;
 	}
 };
 
-template<void (mos_6510::*set_reg)(std::uint8_t), bool update_nz>
-class stack_pull : public instruction_step_read {
-	using instruction_step_read::instruction_step_read;
+template<typename CPU>
+class instruction_step_fetch_next : public instruction_step_read<CPU> {
+public:
+	using instruction_step_read<CPU>::instruction_step_read;
+
+	virtual std::uint32_t step() override {
+		instruction_step_read<CPU>::get_cpu()->fetch_opcode();
+		return instruction_step_read<CPU>::step();
+	}
+};
+
+template<typename CPU>
+class instruction_step_write : public instruction_step<CPU> {
+public:
+	using instruction_step<CPU>::instruction_step;
+
+	virtual std::uint32_t check() override {
+		return 0;
+	}
+};
+
+template<typename CPU>
+class internal_read : public instruction_step_read<CPU> {
+public:
+	using instruction_step_read<CPU>::instruction_step_read;
+
+	virtual void execute() override {}
+};
+
+template<typename CPU>
+class internal_write : public instruction_step_write<CPU> {
+public:
+	using instruction_step_write<CPU>::instruction_step_write;
+
+	virtual void execute() override {}
+};
+
+template<typename CPU>
+class fetch_program_code : public instruction_step_read<CPU> {
+public:
+	using instruction_step_read<CPU>::instruction_step_read;
+
+	virtual void execute() override {
+		instruction_step_read<CPU>::get_cpu()->internal_read_program_code();
+	}
+};
+
+template<typename CPU, bool x_index>
+class fetch_indirect_pointer : public instruction_step_read<CPU> {
+public:
+	using instruction_step_read<CPU>::instruction_step_read;
+
+	virtual void execute() override {
+		instruction_step_read<CPU>::get_cpu()->fetch_indirect_pointer(x_index);
+	}
+};
+
+template<typename CPU, typename REG, bool update_nz>
+class stack_pull : public instruction_step_read<CPU> {
+	using instruction_step_read<CPU>::instruction_step_read;
 
 	virtual void execute() override {
 		std::uint8_t v;
-		get_cpu()->stack_pull(v);
-		(get_cpu()->*set_reg)(v);
+		REG reg(instruction_step_read<CPU>::get_cpu(), this);
+		instruction_step_read<CPU>::get_cpu()->stack_pull(v);
+		reg.set(v);
 		if (update_nz) {
-			update_flags_NZ(v);
+			instruction_step_read<CPU>::update_flags_NZ(v);
 		}
 	}
 };
 
-template<std::uint8_t (mos_6510::*get_reg)() const>
-class stack_push : public instruction_step_write {
-	using instruction_step_write::instruction_step_write;
+template<typename CPU, typename REG>
+class stack_push : public instruction_step_write<CPU> {
+	using instruction_step_write<CPU>::instruction_step_write;
 
 	virtual void execute() override {
-		std::uint8_t v = (get_cpu()->*get_reg)();
-		get_cpu()->stack_push(v);
+		REG reg(instruction_step_write<CPU>::get_cpu(), this);
+		std::uint8_t v = reg.get();
+		instruction_step_write<CPU>::get_cpu()->stack_push(v);
 	}
 };
 
-template<void (mos_6510::*set_f)(bool), bool value>
-class set_flag : public instruction_step_read {
-	using instruction_step_read::instruction_step_read;
+template<typename CPU, typename FLAG, bool value>
+class set_flag : public instruction_step_read<CPU> {
+	using instruction_step_read<CPU>::instruction_step_read;
 
 	virtual void execute() override {
-		(get_cpu()->*set_f)(value);
+		FLAG flag(instruction_step_read<CPU>::get_cpu(), this);
+		flag.set(value);
 	}
 };
 
@@ -289,12 +180,11 @@ harpoon::execution::instruction::step_handlers make_instruction_step() {
 	return {check_fn<T>, step_fn<T>};
 }
 
-template<void (mos_6510::*set_f)(bool), bool value>
-harpoon::execution::instruction set_flag_factory(harpoon::execution::processing_unit *cpu,
-                                                 const std::string &mnemonic) {
+template<typename CPU, typename FLAG, bool value>
+harpoon::execution::instruction set_flag_factory(CPU *cpu, const std::string &mnemonic) {
 	return harpoon::execution::instruction(cpu,
 	                                       {
-	                                           make_instruction_step<set_flag<set_f, value>>(),
+	                                           make_instruction_step<set_flag<CPU, FLAG, value>>(),
 	                                       },
 	                                       disassembler::implied(mnemonic));
 }
