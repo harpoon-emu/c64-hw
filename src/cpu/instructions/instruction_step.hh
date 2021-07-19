@@ -24,12 +24,20 @@ public:
 	virtual std::uint32_t check() = 0;
 	virtual std::uint32_t step() {
 		execute();
-		return _delay;
+		return get_delay();
 	}
 	virtual void execute() = 0;
 
 	void set_delay(std::uint32_t d) {
 		_delay = d;
+	}
+
+	void add_delay(std::uint32_t d) {
+		_delay += d;
+	}
+
+	std::uint32_t get_delay() const {
+		return _delay;
 	}
 
 protected:

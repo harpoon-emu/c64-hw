@@ -40,6 +40,8 @@ public:
 	using instruction_factory = std::function<harpoon::execution::instruction(mos_6510 *)>;
 
 	union internal_memory_access {
+		std::uint16_t w;
+		std::uint8_t _b[2];
 		struct {
 			union {
 				std::uint8_t previous;
@@ -50,8 +52,6 @@ public:
 				std::uint8_t h;
 			};
 		} b;
-		std::uint8_t _b[2];
-		std::uint16_t w;
 	};
 
 	void create();
