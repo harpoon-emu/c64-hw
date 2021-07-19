@@ -95,7 +95,7 @@ public:
 		}
 
 		if ((a & 0xFF00) != (address & 0xFF00)) {
-			data_accessor<CPU, std::uint8_t>::get_instruction_step()->set_delay(2);
+			data_accessor<CPU, std::uint8_t>::get_instruction_step()->add_delay(1);
 		}
 
 		return v;
