@@ -46,6 +46,13 @@ public:
 	MOCK_METHOD(std::uint8_t, get_PCL, (), (const));
 	MOCK_METHOD(std::uint8_t, get_PCH, (), (const));
 	MOCK_METHOD(std::uint8_t, get_latch, (), (const));
+
+	MOCK_METHOD(void, get_program_code, (std::uint8_t &), ());
+
+	MOCK_METHOD(void, internal_read_program_code, (), ());
+	MOCK_METHOD(union internal_memory_access, get_internal_memory_access, (), (const));
+
+	MOCK_METHOD(std::uint16_t, get_indirect_pointer, (), (const));
 };
 
 } // namespace mocks
