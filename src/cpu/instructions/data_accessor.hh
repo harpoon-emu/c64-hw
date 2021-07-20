@@ -21,6 +21,14 @@ public:
 	void store(T v) {}
 };
 
+/**
+ * @brief Access data from CPU register.
+ * Flags changed: NZ
+ *
+ * @tparam CPU
+ * @tparam T
+ * @tparam REG
+ */
 template<typename CPU, typename T, typename REG>
 class register_accessor : public data_accessor<CPU, T> {
 public:
@@ -36,6 +44,14 @@ public:
 	}
 };
 
+/**
+ * @brief Access constant value
+ * Flags changed: NZ
+ *
+ * @tparam CPU
+ * @tparam T
+ * @tparam value
+ */
 template<typename CPU, typename T, T value>
 class value_accessor : public data_accessor<CPU, T> {
 public:
@@ -49,6 +65,17 @@ public:
 	}
 };
 
+/**
+ * @brief Read next byte from program code. Store in internal register.
+ * IMA.L <- IMA.H
+ * IMA.H <- memory[PC]
+ * PC++
+ * Flags changed: NZ
+ * NOTE: This accessor reads only 1 byte from program code (PC incremented by 1), but returns 2
+ * bytes.
+ *
+ * @tparam CPU
+ */
 template<typename CPU>
 class program_code_accessor : public data_accessor<CPU, std::uint16_t> {
 public:
@@ -66,6 +93,14 @@ public:
 	}
 };
 
+/**
+ * @brief Read and return next byte from program code.
+ * PC++
+ * Flags changed: NZ
+ *
+ * @tparam CPU
+ * @tparam T
+ */
 template<typename CPU, typename T>
 class immediate_accessor : public data_accessor<CPU, T> {
 public:
@@ -81,6 +116,11 @@ public:
 	}
 };
 
+/**
+ * @brief Generic in-memory data accessor
+ *
+ * @tparam CPU
+ */
 template<typename CPU>
 class memory_accessor : public data_accessor<CPU, std::uint8_t> {
 public:
@@ -107,6 +147,12 @@ public:
 	}
 };
 
+/**
+ * @brief Zeropage data accessor
+ * memory[IMA.b.current+index]
+ *
+ * @tparam CPU
+ */
 template<typename CPU>
 class zero_page_accessor : public memory_accessor<CPU> {
 public:
@@ -128,6 +174,13 @@ public:
 	}
 };
 
+/**
+ * @brief Indexed zeropage data accessor
+ * memory[IMA.b.current + REG]
+ *
+ * @tparam CPU
+ * @tparam REG
+ */
 template<typename CPU, typename REG>
 class indexed_zero_page_accessor : public zero_page_accessor<CPU> {
 public:
@@ -144,6 +197,12 @@ public:
 	}
 };
 
+/**
+ * @brief Absolute addressing in-memory data accessor
+ * memory[IMA.w + index]
+ *
+ * @tparam CPU
+ */
 template<typename CPU>
 class absolute_accessor : public memory_accessor<CPU> {
 public:
@@ -160,6 +219,13 @@ public:
 	}
 };
 
+/**
+ * @brief Indexed absolute addressing data accessor
+ * memory[IMA.w + REG]
+ *
+ * @tparam CPU
+ * @tparam REG
+ */
 template<typename CPU, typename REG>
 class indexed_absolute_accessor : public absolute_accessor<CPU> {
 public:
@@ -176,6 +242,12 @@ public:
 	}
 };
 
+/**
+ * @brief Indirect addressing data accessor
+ * memory[indirect_pointer + index]
+ *
+ * @tparam CPU
+ */
 template<typename CPU>
 class indirect_accessor : public memory_accessor<CPU> {
 public:
@@ -192,6 +264,13 @@ public:
 	}
 };
 
+/**
+ * @brief Indexed indirect addressing data accessor
+ * memory[indirect_pointer + REG]
+ *
+ * @tparam CPU
+ * @tparam REG
+ */
 template<typename CPU, typename REG>
 class indexed_indirect_accessor : public indirect_accessor<CPU> {
 public:
