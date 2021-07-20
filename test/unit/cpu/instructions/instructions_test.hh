@@ -2,6 +2,7 @@
 #define TEST_UNIT_CPU_INSTRUCTIONS_INSTRUCTIONS_TEST_HH
 
 #include "mocks/instruction_step.hh"
+#include "mocks/memory.hh"
 #include "mocks/mos_6510.hh"
 
 #include <harpoon/execution/instruction.hh>
@@ -15,6 +16,9 @@ namespace instructions {
 
 class instructions_test : public ::testing::Test {
 protected:
+	virtual void SetUp();
+
+	std::shared_ptr<mocks::memory> _memory{};
 	mocks::mos_6510 _mos_6510{};
 	harpoon::execution::instruction _instruction{
 	    &_mos_6510, {}, [](const harpoon::execution::instruction &, std::ostream &) {}};

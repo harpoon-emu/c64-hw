@@ -2,6 +2,7 @@ add_executable(
 	t_cpu_instructions_runner
 	cpu_accessor.cc
 	instruction_step_op.cc
+	instructions_test.cc
 )
 
 target_link_libraries(
