@@ -79,17 +79,6 @@ public:
 };
 
 template<typename CPU>
-class instruction_step_fetch_next : public instruction_step_read<CPU> {
-public:
-	using instruction_step_read<CPU>::instruction_step_read;
-
-	virtual std::uint32_t step() override {
-		instruction_step_read<CPU>::get_cpu()->fetch_opcode();
-		return instruction_step_read<CPU>::step();
-	}
-};
-
-template<typename CPU>
 class instruction_step_write : public instruction_step<CPU> {
 public:
 	using instruction_step<CPU>::instruction_step;
