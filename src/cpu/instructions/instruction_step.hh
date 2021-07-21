@@ -47,13 +47,13 @@ protected:
 
 	template<typename T>
 	void update_flag_Z(T v) {
-		get_cpu()->get_registers().P.Z() = (v == 0);
+		get_cpu()->set_flag_Z(v == 0);
 	}
 
 	template<typename T>
 	void update_flag_N(T v) {
 		T h = 1 << ((sizeof(T) * 8) - 1);
-		get_cpu()->get_registers().P.N() = ((v & h) == h);
+		get_cpu()->set_flag_N((v & h) == h);
 	}
 
 	template<typename T>
