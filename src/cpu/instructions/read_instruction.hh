@@ -45,9 +45,9 @@ class compare_register : public instruction_step_read<CPU> {
 		m = d.fetch(false);
 		r = a - m;
 
-		instruction_step_read<CPU>::get_cpu()->get_registers().P.N() = ((r & 0x80) == 0x80);
-		instruction_step_read<CPU>::get_cpu()->get_registers().P.Z() = (r == 0x00);
-		instruction_step_read<CPU>::get_cpu()->get_registers().P.C() = (a >= m);
+		instruction_step_read<CPU>::get_cpu()->set_flag_N((r & 0x80) == 0x80);
+		instruction_step_read<CPU>::get_cpu()->set_flag_Z(r == 0x00);
+		instruction_step_read<CPU>::get_cpu()->set_flag_C(a >= m);
 	}
 };
 

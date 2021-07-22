@@ -1,5 +1,6 @@
 #include "../src/cpu/instructions/instruction_step.hh"
 
+#include "instruction_step.hh"
 #include "instructions_test.hh"
 
 #include <harpoon/c64-hw/cpu/mos_6510.hh>
@@ -12,21 +13,6 @@ namespace test {
 namespace unit {
 namespace cpu {
 namespace instructions {
-
-template<typename C>
-class instruction_step_test : public instructions_test {
-protected:
-	C _instruction_step_ut{_instruction};
-
-	void test_check(std::uint32_t expect = 0) {
-		EXPECT_EQ(_instruction_step_ut.check(), expect);
-	}
-
-	void test_step(std::uint32_t expect_add = 0) {
-		_instruction_step_ut.set_delay(128);
-		EXPECT_EQ(_instruction_step_ut.step(), 128 + expect_add);
-	}
-};
 
 class instruction_step : public instruction_step_test<mocks::instruction_step<mocks::mos_6510>> {};
 
