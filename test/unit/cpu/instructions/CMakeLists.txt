@@ -4,6 +4,9 @@ add_executable(
 	data_accessor.cc
 	instruction_step_op.cc
 	instructions_test.cc
+	instruction_step.cc
+	read_instruction.cc
+	write_instruction.cc
 )
 
 target_link_libraries(

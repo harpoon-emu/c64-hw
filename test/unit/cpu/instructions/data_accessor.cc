@@ -49,23 +49,7 @@ std::string param_test_print_tuple_4(const testing::TestParamInfo<typename T::Pa
 }
 
 template<typename T>
-class data_accessor : public instructions_test {
-protected:
-	void _set_flags_expectations(bool f, T v) {
-		if (f) {
-			T h = 1 << (sizeof(T) * 8 - 1);
-			EXPECT_CALL(_mos_6510, set_flag_N((v & h) == h));
-			EXPECT_CALL(_mos_6510, set_flag_Z(v == 0));
-		} else {
-			EXPECT_CALL(_mos_6510, set_flag_N(::testing::_)).Times(0);
-			EXPECT_CALL(_mos_6510, set_flag_Z(::testing::_)).Times(0);
-		}
-		EXPECT_CALL(_mos_6510, set_flag_C(::testing::_)).Times(0);
-		EXPECT_CALL(_mos_6510, set_flag_I(::testing::_)).Times(0);
-		EXPECT_CALL(_mos_6510, set_flag_D(::testing::_)).Times(0);
-		EXPECT_CALL(_mos_6510, set_flag_V(::testing::_)).Times(0);
-	}
-};
+class data_accessor : public instructions_test {};
 
 #define REGISTER_ACCESSOR_TEST(REG)                                                       \
 	class register_accessor_##REG                                                         \
@@ -105,7 +89,7 @@ class value_accessor : public data_accessor<std::uint8_t>,
                                                                                         \
 		c64::hw::cpu::instructions::value_accessor<mocks::mos_6510, std::uint8_t, v> d( \
 		    &_mos_6510, &_instruction_step);                                            \
-		_set_flags_expectations(f, v);                                                  \
+		_set_flags_expectations<std::uint8_t>(f, v);                                    \
 		EXPECT_EQ(d.fetch(f), v);                                                       \
 	}
 

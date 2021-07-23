@@ -52,7 +52,15 @@ public:
 	MOCK_METHOD(void, internal_read_program_code, (), ());
 	MOCK_METHOD(union internal_memory_access, get_internal_memory_access, (), (const));
 
+	MOCK_METHOD(void, fetch_indirect_pointer, (bool), ());
+
 	MOCK_METHOD(std::uint16_t, get_indirect_pointer, (), (const));
+
+	MOCK_METHOD(void, stack_push, (std::uint8_t), ());
+	MOCK_METHOD(void, stack_pull, (std::uint8_t &), ());
+
+	MOCK_METHOD(void, test_store, (std::uint8_t), ());
+	MOCK_METHOD(std::uint8_t, test_fetch, (), ());
 };
 
 } // namespace mocks
