@@ -6,6 +6,7 @@ add_executable(
 	instructions_test.cc
 	instruction_step.cc
 	read_instruction.cc
+	write_instruction.cc
 )
 
 target_link_libraries(

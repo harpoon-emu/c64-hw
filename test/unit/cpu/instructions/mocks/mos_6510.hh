@@ -58,6 +58,9 @@ public:
 
 	MOCK_METHOD(void, stack_push, (std::uint8_t), ());
 	MOCK_METHOD(void, stack_pull, (std::uint8_t &), ());
+
+	MOCK_METHOD(void, test_store, (std::uint8_t), ());
+	MOCK_METHOD(std::uint8_t, test_fetch, (), ());
 };
 
 } // namespace mocks

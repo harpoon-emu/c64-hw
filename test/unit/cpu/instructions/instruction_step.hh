@@ -1,3 +1,6 @@
+#ifndef TEST_UNIT_CPU_INSTRUCTIONS_INSTRUCTIONS_STEP_HH
+#define TEST_UNIT_CPU_INSTRUCTIONS_INSTRUCTIONS_STEP_HH
+
 #include "instructions_test.hh"
 
 #include <gmock/gmock.h>
@@ -27,3 +30,5 @@ protected:
 } // namespace cpu
 } // namespace unit
 } // namespace test
+
+#endif
